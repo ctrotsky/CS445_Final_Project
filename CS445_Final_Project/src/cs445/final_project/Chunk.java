@@ -1,6 +1,9 @@
 /***************************************************************
 * file: Chunk.java
 * author: Colin Trotter
+* author: Cristian-Garcia
+* author: Rocky Qiu
+* author: Mirza Hasan Baig
 * class: CS 445 – Computer Graphics
 *
 * assignment: final program
@@ -54,17 +57,40 @@ public class Chunk {
         VBOColorHandle = glGenBuffers();
         VBOVertexHandle = glGenBuffers();
         VBOTextureHandle = glGenBuffers();
+        int height=0;
+        int pheight=0;
+        SimplexNoise noise;
+        Random r= new Random();
+        float p=0;
+        int floor =0;
+        while (p<.03)
+        {
+            p=r.nextFloat();
+        }
+        int seed= 25*r.nextInt();
+        noise=new SimplexNoise(CHUNK_SIZE,p,seed);
         FloatBuffer VertexPositionData = BufferUtils.createFloatBuffer((CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE) * 6 * 12);
         FloatBuffer VertexColorData = BufferUtils.createFloatBuffer((CHUNK_SIZE* CHUNK_SIZE * CHUNK_SIZE) * 6 * 12);
         FloatBuffer VertexTextureData = BufferUtils.createFloatBuffer((CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE)* 6 * 12);
         for (float x = 0; x < CHUNK_SIZE; x += 1) {
             for (float z = 0; z < CHUNK_SIZE; z += 1) {
-                for(float y = 0; y < CHUNK_SIZE; y++){
+                int i= (int)(StartX+x*((300-startX)/640));
+                int k= (int)(StartZ+z*((300-startZ)/640));
+               
+                if(floor%10 ==0 && x%3==0)
+                {
+                height =(StartY+(int)(100*noise.getNoise(i,k)*CHUNK_SIZE));
+                height= height%10 +20;
+                if((pheight-height) > 3 )
+                    height = height +Math.abs(height-pheight);
+                }
+                for(float y = 0; y < height; y++){
                     VertexPositionData.put(createCube((float) (startX + x * CUBE_LENGTH), (float)(y * CUBE_LENGTH + (int)(CHUNK_SIZE*.8)), (float) (startZ + z * CUBE_LENGTH)));
                     VertexColorData.put(createCubeVertexCol(getCubeColor(Cubes[(int) x][(int) y][(int) z])));
                     VertexTextureData.put(createTexCube((float) 0, (float) 0, Cubes[(int)(x)][(int) (y)][(int) (z)]));
 
                 }
+                floor++;
             }
         }
         VertexColorData.flip();

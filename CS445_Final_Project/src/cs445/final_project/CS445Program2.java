@@ -1,6 +1,9 @@
 /***************************************************************
 * file: CS445Program1.java
 * author: Colin Trotter
+* author: Cristian-Garcia
+* author: Rocky Qiu
+* author: Mirza Hasan Baig
 * class: CS 445 – Computer Graphics
 *
 * assignment: program 1
