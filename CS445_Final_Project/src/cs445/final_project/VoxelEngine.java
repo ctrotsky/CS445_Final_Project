@@ -4,7 +4,7 @@
 * class: CS 445 – Computer Graphics
 *
 * assignment: final program
-* date last modified: 5/4/2017
+* date last modified: 5/17/2017
 *
 * purpose: This class renders cubes in a voxel engine.
 *
@@ -20,7 +20,7 @@ import static org.lwjgl.opengl.GL11.*;
 import org.lwjgl.util.glu.GLU;
 
 public class VoxelEngine {
-    ArrayList<Cube> cubes;
+    ArrayList<Chunk> chunks;
     private static VoxelEngine INSTANCE;
     private final int windowWidth = 640;
     private final int windowHeight = 480;
@@ -43,11 +43,8 @@ public class VoxelEngine {
     // method: VoxelEngine()
     // purpose: private constructor. Used to make a singleton instance of the class.
     private VoxelEngine(){
-        cubes = new ArrayList<>();
+        chunks = new ArrayList<>();
         camera = new CameraController(2, -2, -4);
-        
-        Cube testCube = new Cube(0,0,0);
-        cubes.add(testCube);
     }
     
     // method: start
@@ -56,6 +53,8 @@ public class VoxelEngine {
         try {
             createWindow();
             initGL();
+            Chunk testChunk = new Chunk(0,0,0);
+            chunks.add(testChunk);
             gameLoop();
         } catch (Exception e) {
             e.printStackTrace();
@@ -91,7 +90,13 @@ public class VoxelEngine {
         GLU.gluPerspective(100.0f, (float)displayMode.getWidth()/(float)displayMode.getHeight(), 0.1f, 300.0f);
         glMatrixMode(GL_MODELVIEW);
         glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);  
-        glTranslatef(0f,1000f,-10f);
+        //glTranslatef(0f,1000f,-10f);
+        
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_COLOR_ARRAY);
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_TEXTURE_2D);
+        glEnableClientState (GL_TEXTURE_COORD_ARRAY);
     }
     
     // method: render
@@ -101,67 +106,16 @@ public class VoxelEngine {
         try{
             glEnable(GL_DEPTH_TEST);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            //glLoadIdentity();
-
-            glBegin(GL_QUADS);   
-            for (Cube cube : cubes){
-                
-                drawCube(cube);               
+   
+            for (Chunk chunk : chunks){
+                chunk.render();
             }
-            glEnd();
 
             Display.update();
             Display.sync(60);
         }catch(Exception e){
 
         }
-    }
-    
-    // method: drawCube
-    // purpose: draws a single cube in the 3D display. It will be located at it's position.
-    private void drawCube(Cube cube){
-        Vector3f pos = cube.getPosition();
-        float x = pos.x;
-        float y = pos.y;
-        float z = pos.z;
-        int offset = cubeSize/2;
-        
-        //Top
-        glColor3f(0f,0f,1f);
-        glVertex3f(x + offset, y + offset, z - offset); 
-        glVertex3f(x - offset, y + offset, z - offset);
-        glVertex3f(x - offset, y + offset, z + offset);
-        glVertex3f(x + offset, y + offset, z + offset);
-        //Bottom
-        glColor3f(1f,0f,1f);
-        glVertex3f(x + offset, y - offset, z + offset); 
-        glVertex3f(x - offset, y - offset, z + offset);
-        glVertex3f(x - offset, y - offset, z - offset);
-        glVertex3f(x + offset, y - offset, z - offset);
-        //Front
-        glColor3f(0f,1f,0f);
-        glVertex3f(x + offset, y + offset, z + offset); 
-        glVertex3f(x - offset, y + offset, z + offset);
-        glVertex3f(x - offset, y - offset, z + offset);
-        glVertex3f(x + offset, y - offset, z + offset);
-        //Back
-        glColor3f(0f,1f,1f);
-        glVertex3f(x + offset, y - offset, z - offset); 
-        glVertex3f(x - offset, y - offset, z - offset);
-        glVertex3f(x - offset, y + offset, z - offset);
-        glVertex3f(x + offset, y + offset, z - offset);
-        //Left
-        glColor3f(1f,1f,0f);
-        glVertex3f(x - offset, y + offset, z + offset); 
-        glVertex3f(x - offset, y + offset, z - offset);
-        glVertex3f(x - offset, y - offset, z - offset);
-        glVertex3f(x - offset, y - offset, z + offset);
-        //Right
-        glColor3f(1f,0f,0f);
-        glVertex3f(x + offset, y - offset, z + offset); 
-        glVertex3f(x + offset, y - offset, z - offset);
-        glVertex3f(x + offset, y + offset, z - offset);
-        glVertex3f(x + offset, y + offset, z + offset);
     }
     
     public void gameLoop()
