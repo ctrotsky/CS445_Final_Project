@@ -7,7 +7,7 @@
 * class: CS 445 – Computer Graphics
 *
 * assignment: final program
-* date last modified: 5/17/2017
+* date last modified: 5/24/2017
 *
 * purpose: This class represents a cube in 3D space. It has a position.
 *
@@ -72,8 +72,8 @@ public class Chunk {
         FloatBuffer VertexPositionData = BufferUtils.createFloatBuffer((CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE) * 6 * 12);
         FloatBuffer VertexColorData = BufferUtils.createFloatBuffer((CHUNK_SIZE* CHUNK_SIZE * CHUNK_SIZE) * 6 * 12);
         FloatBuffer VertexTextureData = BufferUtils.createFloatBuffer((CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE)* 6 * 12);
-        for (float x = 0; x < CHUNK_SIZE; x += 1) {
-            for (float z = 0; z < CHUNK_SIZE; z += 1) {
+        for (int x = 0; x < CHUNK_SIZE; x += 1) {
+            for (int z = 0; z < CHUNK_SIZE; z += 1) {
                 int i= (int)(StartX+x*((300-startX)/640));
                 int k= (int)(StartZ+z*((300-startZ)/640));
                
@@ -84,11 +84,12 @@ public class Chunk {
                 if((pheight-height) > 3 )
                     height = height +Math.abs(height-pheight);
                 }
-                for(float y = 0; y < height; y++){
+                for(int y = 0; y < height; y++){
+                    pickBlockType(x,y,z,height);    //pick which type the block should be based on height
                     VertexPositionData.put(createCube((float) (startX + x * CUBE_LENGTH), (float)(y * CUBE_LENGTH + (int)(CHUNK_SIZE*.8)), (float) (startZ + z * CUBE_LENGTH)));
                     VertexColorData.put(createCubeVertexCol(getCubeColor(Cubes[(int) x][(int) y][(int) z])));
                     VertexTextureData.put(createTexCube((float) 0, (float) 0, Cubes[(int)(x)][(int) (y)][(int) (z)]));
-
+                    
                 }
                 floor++;
             }
@@ -308,27 +309,6 @@ public class Chunk {
         }
         r = new Random();
         Cubes = new Cube[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
-        for (int x = 0; x < CHUNK_SIZE; x++) {
-            for (int y = 0; y < CHUNK_SIZE; y++) {
-                for (int z = 0; z < CHUNK_SIZE; z++) {
-                    if(r.nextFloat()>0.8f){
-                        Cubes[x][y][z] = new Cube(Cube.BlockType.BlockType_Grass);
-                    }else if(r.nextFloat()>0.7f){
-                        Cubes[x][y][z] = new Cube(Cube.BlockType.BlockType_Sand);
-                    }else if(r.nextFloat()>0.5f){
-                        Cubes[x][y][z] = new Cube(Cube.BlockType.BlockType_Dirt);
-                    }else if(r.nextFloat()>0.4f){
-                        Cubes[x][y][z] = new Cube(Cube.BlockType.BlockType_Water);
-                    }else if(r.nextFloat()>0.2f){
-                        Cubes[x][y][z] = new Cube(Cube.BlockType.BlockType_Stone);
-                    }else if(r.nextFloat()>0.1f){
-                        Cubes[x][y][z] = new Cube(Cube.BlockType.BlockType_Bedrock);
-                    }else{
-                        Cubes[x][y][z] = new Cube(Cube.BlockType.BlockType_Default);
-                    }
-                }
-            }
-        }
         VBOColorHandle = glGenBuffers();
         VBOVertexHandle = glGenBuffers();
         VBOTextureHandle = glGenBuffers();
@@ -336,6 +316,39 @@ public class Chunk {
         StartY = startY;
         StartZ = startZ;
         rebuildMesh(startX, startY, startZ);
+    }
+    
+    // method: pickBlockType
+    // purpose: sets the cube at the given x,y,z location to a block type decided by it's height
+    private void pickBlockType(int x, int y, int z, int height){
+        if (y == 0){
+            //bottom layer should be all bedrock
+            Cubes[x][y][z] = new Cube(Cube.BlockType.BlockType_Bedrock); 
+        }
+        else if (y > 0 && y < height - 1){
+            //middle layers should be stone or dirt
+            float blockType = r.nextFloat();
+            if (blockType > 0.5){
+                Cubes[x][y][z] = new Cube(Cube.BlockType.BlockType_Stone); 
+            }
+            else{
+                Cubes[x][y][z] = new Cube(Cube.BlockType.BlockType_Dirt); 
+            }
+        }
+        else{
+            //top layer should be grass, water, or sand
+            float blockType = r.nextFloat();
+            if (blockType > 0.1){
+                Cubes[x][y][z] = new Cube(Cube.BlockType.BlockType_Grass); 
+            }
+            else if (blockType > 0.05){
+                Cubes[x][y][z] = new Cube(Cube.BlockType.BlockType_Sand); 
+            }
+            else{
+                Cubes[x][y][z] = new Cube(Cube.BlockType.BlockType_Water); 
+            }
+            
+        }
     }
     
 }
