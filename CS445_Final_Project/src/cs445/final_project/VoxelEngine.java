@@ -48,7 +48,7 @@ public class VoxelEngine {
     // purpose: private constructor. Used to make a singleton instance of the class.
     private VoxelEngine(){
         chunks = new ArrayList<>();
-        camera = new CameraController(2, -2, -4);
+        camera = new CameraController( 10, -90, -30);
     }
     
     // method: start
@@ -101,14 +101,9 @@ public class VoxelEngine {
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_TEXTURE_2D);
         glEnableClientState (GL_TEXTURE_COORD_ARRAY);
-        initLightArrays();
-        glLight(GL_LIGHT0,GL_POSITION,lightPosition);
-        glLight(GL_LIGHT0,GL_SPECULAR,whiteLight);
-        glLight(GL_LIGHT0,GL_DIFFUSE,whiteLight);
-        glLight(GL_LIGHT0,GL_AMBIENT,whiteLight);
-        
-        glEnable(GL_LIGHTING);
-        glEnable(GL_LIGHT0);
+        initLight();
+       
+       
     }
     
     // method: render
@@ -142,8 +137,9 @@ public class VoxelEngine {
             //set the modelview matrix back to the identity
             glLoadIdentity();
             //look through the camera before you draw anything
+           
             camera.lookThrough();
-
+ 
             //you would draw your scene here.
             render();
         }
@@ -188,12 +184,21 @@ public class VoxelEngine {
         }
     }
     
-    private void initLightArrays(){
+    private void initLight(){
         lightPosition=BufferUtils.createFloatBuffer(4);
         lightPosition.put(0.0f).put(0.0f).put(1.0f).put(1.0f).flip();
+        //lightPosition.put(21.0f).put(10.0f).put(4.0f).put(1.0f).flip();
         
         whiteLight=BufferUtils.createFloatBuffer(4);
         whiteLight.put(1.0f).put(1.0f).put(1.0f).put(0.0f).flip();
+        
+        glLight(GL_LIGHT0,GL_SPECULAR,whiteLight);
+        glLight(GL_LIGHT0,GL_DIFFUSE,whiteLight);
+        glLight(GL_LIGHT0,GL_AMBIENT,whiteLight);
+        glLight(GL_LIGHT0,GL_POSITION,lightPosition);
+        glEnable(GL_LIGHTING);
+        glEnable(GL_LIGHT0);
+       
     }
 
 
