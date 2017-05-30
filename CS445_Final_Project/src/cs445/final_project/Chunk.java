@@ -58,7 +58,7 @@ public class Chunk {
         VBOVertexHandle = glGenBuffers();
         VBOTextureHandle = glGenBuffers();
         int height=0;
-        int pheight=0;
+        int pheight=30;
         SimplexNoise noise;
         Random r= new Random();
         float p=0;
@@ -80,9 +80,9 @@ public class Chunk {
                 if(floor%10 ==0 && x%3==0)
                 {
                 height =(StartY+(int)(100*noise.getNoise(i,k)*CHUNK_SIZE));
-                height= height%10 +20;
-                if((pheight-height) > 3 )
-                    height = height +Math.abs(height-pheight);
+                height= height%5 +25;
+                if(Math.abs(pheight-height) > 1 )
+                    height = pheight;
                 }
                 for(int y = 0; y < height; y++){
                     pickBlockType(x,y,z,height);    //pick which type the block should be based on height
@@ -92,6 +92,7 @@ public class Chunk {
                     
                 }
                 floor++;
+                pheight=height;
             }
         }
         VertexColorData.flip();

@@ -18,6 +18,8 @@ import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import static org.lwjgl.opengl.GL11.*;
 import org.lwjgl.util.glu.GLU;
+import java.nio.FloatBuffer;
+import org.lwjgl.BufferUtils;
 
 public class VoxelEngine {
     ArrayList<Chunk> chunks;
@@ -29,6 +31,8 @@ public class VoxelEngine {
     private final float movementSpeed = .35f;
     private DisplayMode displayMode;
     private CameraController camera;
+    private FloatBuffer lightPosition;
+    private FloatBuffer whiteLight;
     
     // method: getInstance()
     // purpose: Static method that returns a singleton instance of the class
@@ -97,6 +101,14 @@ public class VoxelEngine {
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_TEXTURE_2D);
         glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+        initLightArrays();
+        glLight(GL_LIGHT0,GL_POSITION,lightPosition);
+        glLight(GL_LIGHT0,GL_SPECULAR,whiteLight);
+        glLight(GL_LIGHT0,GL_DIFFUSE,whiteLight);
+        glLight(GL_LIGHT0,GL_AMBIENT,whiteLight);
+        
+        glEnable(GL_LIGHTING);
+        glEnable(GL_LIGHT0);
     }
     
     // method: render
@@ -174,6 +186,14 @@ public class VoxelEngine {
         if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
             camera.moveDown(movementSpeed);
         }
+    }
+    
+    private void initLightArrays(){
+        lightPosition=BufferUtils.createFloatBuffer(4);
+        lightPosition.put(0.0f).put(0.0f).put(1.0f).put(1.0f).flip();
+        
+        whiteLight=BufferUtils.createFloatBuffer(4);
+        whiteLight.put(1.0f).put(1.0f).put(1.0f).put(0.0f).flip();
     }
 
 
