@@ -58,17 +58,39 @@ public class Chunk {
         VBOVertexHandle = glGenBuffers();
         VBOTextureHandle = glGenBuffers();
         int height=0;
-        int pheight=30;
+        int pheight[][]= new int[30][30];
         SimplexNoise noise;
         Random r= new Random();
         float p=0;
         int floor =0;
+        
+        
         while (p<.03)
         {
             p=r.nextFloat();
         }
-        int seed= 25*r.nextInt();
-        noise=new SimplexNoise(CHUNK_SIZE,p,seed);
+          int seed= 25*r.nextInt();
+          noise=new SimplexNoise(CHUNK_SIZE,p,seed);
+        for(int x=0;x<CHUNK_SIZE;x++)
+        {
+            for(int z=0;z<CHUNK_SIZE;z++)
+            {   int i= (int)(StartX+x*((300-startX)/640));
+                int k= (int)(StartZ+z*((300-startZ)/640));
+             
+                  if(x%4==0 && z%4==0)
+                  {
+                    height =(StartY+(int)(100*noise.getNoise(i,k)*CHUNK_SIZE))%5+25;
+                  }
+                  
+                  System.out.println(x%4+z%4);
+                pheight[x][z]= height%5 +25;
+                
+                
+                  
+            }
+        }
+        
+      
         FloatBuffer VertexPositionData = BufferUtils.createFloatBuffer((CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE) * 6 * 12);
         FloatBuffer VertexColorData = BufferUtils.createFloatBuffer((CHUNK_SIZE* CHUNK_SIZE * CHUNK_SIZE) * 6 * 12);
         FloatBuffer VertexTextureData = BufferUtils.createFloatBuffer((CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE)* 6 * 12);
@@ -77,22 +99,16 @@ public class Chunk {
                 int i= (int)(StartX+x*((300-startX)/640));
                 int k= (int)(StartZ+z*((300-startZ)/640));
                
-                if(floor%10 ==0 && x%3==0)
-                {
-                height =(StartY+(int)(100*noise.getNoise(i,k)*CHUNK_SIZE));
-                height= height%5 +25;
-                if(Math.abs(pheight-height) > 1 )
-                    height = pheight;
-                }
-                for(int y = 0; y < height; y++){
-                    pickBlockType(x,y,z,height);    //pick which type the block should be based on height
+
+                for(int y = 0; y < pheight[x][z]; y++){
+                    pickBlockType(x,y,z,pheight[x][z]);    //pick which type the block should be based on height
                     VertexPositionData.put(createCube((float) (startX + x * CUBE_LENGTH), (float)(y * CUBE_LENGTH + (int)(CHUNK_SIZE*.8)), (float) (startZ + z * CUBE_LENGTH)));
                     VertexColorData.put(createCubeVertexCol(getCubeColor(Cubes[(int) x][(int) y][(int) z])));
                     VertexTextureData.put(createTexCube((float) 0, (float) 0, Cubes[(int)(x)][(int) (y)][(int) (z)]));
                     
                 }
                 floor++;
-                pheight=height;
+                pheight[x][z]=height;
             }
         }
         VertexColorData.flip();
