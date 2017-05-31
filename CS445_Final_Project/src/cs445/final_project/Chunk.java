@@ -27,6 +27,7 @@ public class Chunk {
     
     static final int CHUNK_SIZE = 30;
     static final int CUBE_LENGTH = 2;
+    static final int WATER_LEVEL = 26;
     private Cube[][][] Cubes;
     private int VBOVertexHandle;
     private int VBOColorHandle;
@@ -38,7 +39,6 @@ public class Chunk {
     // method: render
     // purpose: pushes a matrix to be rendered that contains all of the Cubes within this chunk, then draws the arrays.
     public void render(){
-        glPushMatrix();
         glPushMatrix();
         glBindBuffer(GL_ARRAY_BUFFER, VBOVertexHandle);
         glVertexPointer(3, GL_FLOAT, 0, 0L);
@@ -71,6 +71,15 @@ public class Chunk {
         }
           int seed= 25*r.nextInt();
           noise=new SimplexNoise(CHUNK_SIZE,p,seed);
+          
+//          for (int i = 0; i < CHUNK_SIZE; i++){
+//              for (int j = 0; j < CHUNK_SIZE; j++){
+//                  System.out.print(noise.getNoise(i, j) + ", ");
+//              }
+//              System.out.println();
+//          }
+          
+          
         for(int x=0;x<CHUNK_SIZE;x++)
         {
             for(int z=0;z<CHUNK_SIZE;z++)
@@ -105,7 +114,14 @@ public class Chunk {
                     VertexPositionData.put(createCube((float) (startX + x * CUBE_LENGTH), (float)(y * CUBE_LENGTH + (int)(CHUNK_SIZE*.8)), (float) (startZ + z * CUBE_LENGTH)));
                     VertexColorData.put(createCubeVertexCol(getCubeColor(Cubes[(int) x][(int) y][(int) z])));
                     VertexTextureData.put(createTexCube((float) 0, (float) 0, Cubes[(int)(x)][(int) (y)][(int) (z)]));
-                    
+                }
+                for (int y = 0; y < WATER_LEVEL; y++){
+                    if (Cubes[x][y][z] == null){
+                        Cubes[x][y][z] = new Cube(Cube.BlockType.BlockType_Water); 
+                        VertexPositionData.put(createCube((float) (startX + x * CUBE_LENGTH), (float)(y * CUBE_LENGTH + (int)(CHUNK_SIZE*.8)), (float) (startZ + z * CUBE_LENGTH)));
+                        VertexColorData.put(createCubeVertexCol(getCubeColor(Cubes[(int) x][(int) y][(int) z])));
+                        VertexTextureData.put(createTexCube((float) 0, (float) 0, Cubes[(int)(x)][(int) (y)][(int) (z)]));
+                    }
                 }
                 floor++;
                 pheight[x][z]=height;
@@ -200,12 +216,12 @@ public class Chunk {
                 break;
             case 2:
                 //Water
-                topFace = getTextureFace(x,y,offset,14,0,false);
-                bottomFace = getTextureFace(x,y,offset,14,0,false);
-                frontFace = getTextureFace(x,y,offset,14,0,false);
-                backFace = getTextureFace(x,y,offset,14,0,false);
-                leftFace = getTextureFace(x,y,offset,14,0,false);
-                rightFace = getTextureFace(x,y,offset,14,0,false);
+                topFace = getTextureFace(x,y,offset,13,12,false);
+                bottomFace = getTextureFace(x,y,offset,13,12,false);
+                frontFace = getTextureFace(x,y,offset,13,12,false);
+                backFace = getTextureFace(x,y,offset,13,12,false);
+                leftFace = getTextureFace(x,y,offset,13,12,false);
+                rightFace = getTextureFace(x,y,offset,13,12,false);
                 break;
             case 3:
                 //Dirt
@@ -352,19 +368,14 @@ public class Chunk {
                 Cubes[x][y][z] = new Cube(Cube.BlockType.BlockType_Dirt); 
             }
         }
-        else{
-            //top layer should be grass, water, or sand
-            float blockType = r.nextFloat();
-            if (blockType > 0.1){
-                Cubes[x][y][z] = new Cube(Cube.BlockType.BlockType_Grass); 
-            }
-            else if (blockType > 0.05){
+        else {
+            //top layer should be grass unless it is at water level or below it
+            if (y <= WATER_LEVEL){
                 Cubes[x][y][z] = new Cube(Cube.BlockType.BlockType_Sand); 
             }
             else{
-                Cubes[x][y][z] = new Cube(Cube.BlockType.BlockType_Water); 
+                Cubes[x][y][z] = new Cube(Cube.BlockType.BlockType_Grass); 
             }
-            
         }
     }
     
