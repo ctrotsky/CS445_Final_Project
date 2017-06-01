@@ -28,8 +28,8 @@ public class Chunk {
     static final int CHUNK_SIZE = 30;
     static final int CUBE_LENGTH = 2;
     static final int BASE_HEIGHT = 10;
-    static final float PERSISTANCE = 0.5f;
-    static final float NOISE_LEVEL = 5f;
+    static final float PERSISTANCE = 0.3f;
+    static final float NOISE_LEVEL = 12f;
     static final int WATER_LEVEL = 9;
     private Cube[][][] Cubes;
     private int VBOVertexHandle;
