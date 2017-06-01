@@ -19,6 +19,7 @@ import org.lwjgl.opengl.DisplayMode;
 import static org.lwjgl.opengl.GL11.*;
 import org.lwjgl.util.glu.GLU;
 import java.nio.FloatBuffer;
+import java.util.Random;
 import org.lwjgl.BufferUtils;
 
 public class VoxelEngine {
@@ -33,6 +34,7 @@ public class VoxelEngine {
     private CameraController camera;
     private FloatBuffer lightPosition;
     private FloatBuffer whiteLight;
+    private static final Random r = new Random();
     
     // method: getInstance()
     // purpose: Static method that returns a singleton instance of the class
@@ -57,7 +59,9 @@ public class VoxelEngine {
         try {
             createWindow();
             initGL();
-            Chunk testChunk = new Chunk(0,0,0);
+            Random r = new Random();
+            int seed= 25*r.nextInt();
+            Chunk testChunk = new Chunk(0,0,0, seed);
             chunks.add(testChunk);
             gameLoop();
         } catch (Exception e) {
@@ -184,6 +188,29 @@ public class VoxelEngine {
         if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
             camera.moveDown(movementSpeed);
         }
+        if (Keyboard.isKeyDown(Keyboard.KEY_R))
+        {
+            for (Chunk chunk : chunks){
+                
+                int seed= 25*r.nextInt();
+                chunk = new Chunk(0,0,0, seed);
+                chunk.rebuildMesh(0,0,0);
+            }
+        }
+        if (Keyboard.isKeyDown(Keyboard.KEY_Q))
+        {
+            for (Chunk chunk : chunks){
+                chunk.WATER_LEVEL = chunk.WATER_LEVEL +1;
+                chunk.rebuildMesh(0,0,0);
+            }
+        }
+        if (Keyboard.isKeyDown(Keyboard.KEY_E))
+        {
+            for (Chunk chunk : chunks){
+                chunk.WATER_LEVEL = chunk.WATER_LEVEL -1;
+                chunk.rebuildMesh(0,0,0);
+            }
+        }
     }
     
     private void initLight(){
@@ -192,7 +219,7 @@ public class VoxelEngine {
         //lightPosition.put(21.0f).put(10.0f).put(4.0f).put(1.0f).flip();
         
         whiteLight=BufferUtils.createFloatBuffer(4);
-        whiteLight.put(1.0f).put(1.0f).put(1.0f).put(0.0f).flip();
+        whiteLight.put(1.5f).put(1.5f).put(1.5f).put(0.0f).flip();
         
         glLight(GL_LIGHT0,GL_SPECULAR,whiteLight);
         glLight(GL_LIGHT0,GL_DIFFUSE,whiteLight);

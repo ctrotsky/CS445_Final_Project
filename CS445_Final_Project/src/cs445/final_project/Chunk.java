@@ -25,12 +25,12 @@ import org.newdawn.slick.util.ResourceLoader;
 
 public class Chunk {
     
-    static final int CHUNK_SIZE = 30;
+    static final int CHUNK_SIZE = 40;
     static final int CUBE_LENGTH = 2;
-    static final int BASE_HEIGHT = 10;
+    static final int BASE_HEIGHT = 15;
     static final float PERSISTANCE = 0.3f;
-    static final float NOISE_LEVEL = 12f;
-    static final int WATER_LEVEL = 9;
+    static final float NOISE_LEVEL = 25f;
+    public int WATER_LEVEL = 14;
     private Cube[][][] Cubes;
     private int VBOVertexHandle;
     private int VBOColorHandle;
@@ -38,6 +38,8 @@ public class Chunk {
     private Random r;
     private int VBOTextureHandle;
     private Texture texture;
+    
+    public int seed;
     
     // method: render
     // purpose: pushes a matrix to be rendered that contains all of the Cubes within this chunk, then draws the arrays.
@@ -61,12 +63,21 @@ public class Chunk {
         VBOVertexHandle = glGenBuffers();
         VBOTextureHandle = glGenBuffers();
         int height=0;
-        int pheight[][]= new int[30][30];
+        int pheight[][]= new int[CHUNK_SIZE][CHUNK_SIZE];
         SimplexNoise noise;
         Random r= new Random();
         
-        int seed= 25*r.nextInt();
+        if (WATER_LEVEL > CHUNK_SIZE){
+            WATER_LEVEL = CHUNK_SIZE;
+        }
+        if (WATER_LEVEL < 0){
+            WATER_LEVEL = 0;
+        }
+        
+        //int seed= 25*r.nextInt();
         noise=new SimplexNoise(CHUNK_SIZE,PERSISTANCE,seed);
+        
+        ClearChunk();
         
         for(int x=0;x<CHUNK_SIZE;x++)
         {
@@ -75,6 +86,9 @@ public class Chunk {
                 int k= (int)(startZ+z*((CHUNK_SIZE-startZ)/CHUNK_SIZE));
              
                 pheight[x][z]= (int)(BASE_HEIGHT + (NOISE_LEVEL *  noise.getNoise(x, z))); 
+                if (pheight[x][z] > CHUNK_SIZE){
+                    pheight[x][z] = CHUNK_SIZE;
+                }
             }
         }
         
@@ -309,7 +323,8 @@ public class Chunk {
     
     // method: Chunk
     // purpose: constructor that creates all cubes within this chunk with a random BlockType, then builds the mesh for this chunk
-    public Chunk(int startX, int startY, int startZ) {
+    public Chunk(int startX, int startY, int startZ, int seed) {
+        this.seed = seed;
         try{
             texture = TextureLoader.getTexture("PNG", ResourceLoader.getResourceAsStream("terrain.png"));
         }
@@ -326,6 +341,7 @@ public class Chunk {
         StartY = startY;
         StartZ = startZ;
         rebuildMesh(startX, startY, startZ);
+        
     }
     
     // method: pickBlockType
@@ -352,6 +368,16 @@ public class Chunk {
             }
             else{
                 Cubes[x][y][z] = new Cube(Cube.BlockType.BlockType_Grass); 
+            }
+        }
+    }
+    
+    private void ClearChunk(){
+        for (int x = 0; x < CHUNK_SIZE; x++){
+            for (int y = 0; y < CHUNK_SIZE; y++){
+                for (int z = 0; z < CHUNK_SIZE; z++){
+                    Cubes[x][y][z] = null;
+                }
             }
         }
     }

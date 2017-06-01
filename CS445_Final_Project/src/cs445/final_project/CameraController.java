@@ -31,9 +31,9 @@ public class CameraController {
         //instantiate position Vector3f to the x y z params.
         position = new Vector3f(x, y, z);
         lPosition = new Vector3f(x,y,z);
-        lPosition.x = 30f;
-        lPosition.y = 30f;
-        lPosition.z = 30f;
+        lPosition.x = 40f;
+        lPosition.y = 40f;
+        lPosition.z = 40f;
     }
     
     // method: yaw
