@@ -27,7 +27,10 @@ public class Chunk {
     
     static final int CHUNK_SIZE = 30;
     static final int CUBE_LENGTH = 2;
-    static final int WATER_LEVEL = 26;
+    static final int BASE_HEIGHT = 10;
+    static final float PERSISTANCE = 0.5f;
+    static final float NOISE_LEVEL = 5f;
+    static final int WATER_LEVEL = 9;
     private Cube[][][] Cubes;
     private int VBOVertexHandle;
     private int VBOColorHandle;
@@ -61,45 +64,20 @@ public class Chunk {
         int pheight[][]= new int[30][30];
         SimplexNoise noise;
         Random r= new Random();
-        float p=0;
-        int floor =0;
         
+        int seed= 25*r.nextInt();
+        noise=new SimplexNoise(CHUNK_SIZE,PERSISTANCE,seed);
         
-        while (p<.03)
-        {
-            p=r.nextFloat();
-        }
-          int seed= 25*r.nextInt();
-          noise=new SimplexNoise(CHUNK_SIZE,p,seed);
-          
-//          for (int i = 0; i < CHUNK_SIZE; i++){
-//              for (int j = 0; j < CHUNK_SIZE; j++){
-//                  System.out.print(noise.getNoise(i, j) + ", ");
-//              }
-//              System.out.println();
-//          }
-          
-          
         for(int x=0;x<CHUNK_SIZE;x++)
         {
             for(int z=0;z<CHUNK_SIZE;z++)
-            {   int i= (int)(StartX+x*((300-startX)/640));
-                int k= (int)(StartZ+z*((300-startZ)/640));
+            {   int i= (int)(startX+x*((CHUNK_SIZE-startX)/CHUNK_SIZE));
+                int k= (int)(startZ+z*((CHUNK_SIZE-startZ)/CHUNK_SIZE));
              
-                  if(x%4==0 && z%4==0)
-                  {
-                    height =(StartY+(int)(100*noise.getNoise(i,k)*CHUNK_SIZE))%5+25;
-                  }
-                  
-                  System.out.println(x%4+z%4);
-                pheight[x][z]= height%5 +25;
-                
-                
-                  
+                pheight[x][z]= (int)(BASE_HEIGHT + (NOISE_LEVEL *  noise.getNoise(x, z))); 
             }
         }
         
-      
         FloatBuffer VertexPositionData = BufferUtils.createFloatBuffer((CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE) * 6 * 12);
         FloatBuffer VertexColorData = BufferUtils.createFloatBuffer((CHUNK_SIZE* CHUNK_SIZE * CHUNK_SIZE) * 6 * 12);
         FloatBuffer VertexTextureData = BufferUtils.createFloatBuffer((CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE)* 6 * 12);
@@ -108,8 +86,8 @@ public class Chunk {
                 int i= (int)(StartX+x*((300-startX)/640));
                 int k= (int)(StartZ+z*((300-startZ)/640));
                
-
                 for(int y = 0; y < pheight[x][z]; y++){
+                    
                     pickBlockType(x,y,z,pheight[x][z]);    //pick which type the block should be based on height
                     VertexPositionData.put(createCube((float) (startX + x * CUBE_LENGTH), (float)(y * CUBE_LENGTH + (int)(CHUNK_SIZE*.8)), (float) (startZ + z * CUBE_LENGTH)));
                     VertexColorData.put(createCubeVertexCol(getCubeColor(Cubes[(int) x][(int) y][(int) z])));
@@ -123,7 +101,6 @@ public class Chunk {
                         VertexTextureData.put(createTexCube((float) 0, (float) 0, Cubes[(int)(x)][(int) (y)][(int) (z)]));
                     }
                 }
-                floor++;
                 pheight[x][z]=height;
             }
         }
@@ -370,7 +347,7 @@ public class Chunk {
         }
         else {
             //top layer should be grass unless it is at water level or below it
-            if (y <= WATER_LEVEL){
+            if (y < WATER_LEVEL){
                 Cubes[x][y][z] = new Cube(Cube.BlockType.BlockType_Sand); 
             }
             else{
