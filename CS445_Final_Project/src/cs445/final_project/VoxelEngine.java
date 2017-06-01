@@ -188,7 +188,7 @@ public class VoxelEngine {
     
     private void initLight(){
         lightPosition=BufferUtils.createFloatBuffer(4);
-        lightPosition.put(0.0f).put(0.0f).put(1.0f).put(1.0f).flip();
+        lightPosition.put(0.0f).put(0.0f).put(0.0f).put(1.0f).flip();
         //lightPosition.put(21.0f).put(10.0f).put(4.0f).put(1.0f).flip();
         
         whiteLight=BufferUtils.createFloatBuffer(4);
