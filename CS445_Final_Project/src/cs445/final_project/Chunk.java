@@ -15,6 +15,7 @@
 package cs445.final_project;
 
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
 import java.util.Random;
 import org.lwjgl.BufferUtils;
 import static org.lwjgl.opengl.GL11.*;
@@ -58,7 +59,7 @@ public class Chunk {
     
     // method: rebuildMesh
     // purpose: adds data from all cubes within this chunk to buffers to be rendered.
-    public void rebuildMesh(float startX, float startY, float startZ) {
+    public void rebuildMesh(int startX, int startY, int startZ) {
         r = new Random(seed);
         glDeleteBuffers(VBOColorHandle);
         glDeleteBuffers(VBOVertexHandle);
@@ -96,6 +97,12 @@ public class Chunk {
                 if (pheight[x][z] > CHUNK_SIZE){
                     pheight[x][z] = CHUNK_SIZE;
                 }
+                for (int y = 0; y<pheight[x][z];y++){
+                    pickBlockType(x,y,z,pheight[x][z]);
+                }
+                for (int y = 0; y<pheight[x][z];y++){
+                    
+                }
             }
         }
         
@@ -104,23 +111,17 @@ public class Chunk {
         FloatBuffer VertexTextureData = BufferUtils.createFloatBuffer((CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE)* 6 * 12);
         
         for (int x = 0; x < CHUNK_SIZE; x += 1) {
-            for (int z = 0; z < CHUNK_SIZE; z += 1) {
-                int i= (int)(StartX+x*((300-startX)/640));
-                int k= (int)(StartZ+z*((300-startZ)/640));
-               
+            for (int z = 0; z < CHUNK_SIZE; z += 1) {              
                 for(int y = 0; y < pheight[x][z]; y++){
-                    
-                    pickBlockType(x,y,z,pheight[x][z]);    //pick which type the block should be based on height
-                    VertexPositionData.put(createCube((float) (startX + x * CUBE_LENGTH), (float)(y * CUBE_LENGTH + (int)(CHUNK_SIZE*.8)), (float) (startZ + z * CUBE_LENGTH)));
-                    VertexColorData.put(createCubeVertexCol(getCubeColor(Cubes[(int) x][(int) y][(int) z])));
-                    VertexTextureData.put(createTexCube((float) 0, (float) 0, Cubes[(int)(x)][(int) (y)][(int) (z)]));
+                    VertexPositionData.put(createCube( (startX + x * CUBE_LENGTH), (startY + y * CUBE_LENGTH), (startZ + z * CUBE_LENGTH)));
+                    VertexTextureData.put(createTexCube((float) 0, (float) 0, Cubes[(int)(x)][(int) (y)][(int) (z)], (startX + x * CUBE_LENGTH), (startY + y * CUBE_LENGTH),  (startZ + z * CUBE_LENGTH)));
                 }
                 for (int y = 0; y < WATER_LEVEL; y++){
-                    if (Cubes[x][y][z] == null){
+                    if (Cubes[x][y][z] == null || Cubes[x][y][z].getBlockType() == Cube.BlockType.BlockType_Default){
+                        //Fill empty space up to WATER_LEVEL with water
                         Cubes[x][y][z] = new Cube(Cube.BlockType.BlockType_Water); 
-                        VertexPositionData.put(createCube((float) (startX + x * CUBE_LENGTH), (float)(y * CUBE_LENGTH + (int)(CHUNK_SIZE*.8)), (float) (startZ + z * CUBE_LENGTH)));
-                        VertexColorData.put(createCubeVertexCol(getCubeColor(Cubes[(int) x][(int) y][(int) z])));
-                        VertexTextureData.put(createTexCube((float) 0, (float) 0, Cubes[(int)(x)][(int) (y)][(int) (z)]));
+                        VertexPositionData.put(createCube( (startX + x * CUBE_LENGTH), (startY + y * CUBE_LENGTH),  (startZ + z * CUBE_LENGTH)));
+                        VertexTextureData.put(createTexCube((float) 0, (float) 0, Cubes[(int)(x)][(int) (y)][(int) (z)], (startX + x * CUBE_LENGTH), (startY + y * CUBE_LENGTH),  (startZ + z * CUBE_LENGTH)));
                     }
                 }
                 pheight[x][z]=height;
@@ -159,44 +160,113 @@ public class Chunk {
     
     // method: createCube
     // purpose: returns a float array representing all faces of a new cube at the given position
-    public static float[] createCube(float x, float y, float z) {
+    public float[] createCube(int x, int y, int z) {
     int offset = CUBE_LENGTH / 2;
-    return new float[] {
+    ArrayList<Integer> faces = new ArrayList<>();
+    
+    
+    int posX = x / CUBE_LENGTH;
+    int posY = y / CUBE_LENGTH;
+    int posZ = z / CUBE_LENGTH;
+    //System.out.println("x: " + posX + ", y: " + posY + ", z: " + posZ);
+    
+    
+    //The following if statements decide whether to draw a face or not
+    //Faces are drawn if they face towards an empty space, or they face out of the chunk
+    //Faces are not drawn if they face a filled cube      
+    if (posY + 1 >= CHUNK_SIZE || Cubes[posX][posY + 1][posZ] == null){
         // TOP QUAD
-        x + offset, y + offset, z,
-        x - offset, y + offset, z,
-        x - offset, y + offset, z - CUBE_LENGTH,
-        x + offset, y + offset, z - CUBE_LENGTH,
+        faces.add(x + offset); faces.add(y + offset); faces.add(z);
+        faces.add(x - offset); faces.add(y + offset); faces.add(z);
+        faces.add(x - offset); faces.add(y + offset); faces.add(z - CUBE_LENGTH);
+        faces.add(x + offset); faces.add(y + offset); faces.add(z - CUBE_LENGTH);
+    }
+    if (posY - 1 < 0 || Cubes[posX][posY - 1][posZ] == null){
         // BOTTOM QUAD
-        x + offset, y - offset, z - CUBE_LENGTH,
-        x - offset, y - offset, z - CUBE_LENGTH,
-        x - offset, y - offset, z,
-        x + offset, y - offset, z,
+        faces.add(x + offset); faces.add(y - offset); faces.add(z - CUBE_LENGTH);
+        faces.add(x - offset); faces.add(y - offset); faces.add(z - CUBE_LENGTH);
+        faces.add(x - offset); faces.add(y - offset); faces.add(z);
+        faces.add(x + offset); faces.add(y - offset); faces.add(z);
+    }
+    if (posZ - 1 < 0 || Cubes[posX][posY][posZ - 1] == null){
         // FRONT QUAD
-        x + offset, y + offset, z - CUBE_LENGTH,
-        x - offset, y + offset, z - CUBE_LENGTH,
-        x - offset, y - offset, z - CUBE_LENGTH,
-        x + offset, y - offset, z - CUBE_LENGTH,
+        faces.add(x + offset); faces.add(y + offset); faces.add(z - CUBE_LENGTH);
+        faces.add(x - offset); faces.add(y + offset); faces.add(z - CUBE_LENGTH);
+        faces.add(x - offset); faces.add(y - offset); faces.add(z - CUBE_LENGTH);
+        faces.add(x + offset); faces.add(y - offset); faces.add(z - CUBE_LENGTH);
+    }
+    if (posZ + 1 >= CHUNK_SIZE || Cubes[posX][posY][posZ + 1] == null){
         // BACK QUAD
-        x + offset, y - offset, z,
-        x - offset, y - offset, z,
-        x - offset, y + offset, z,
-        x + offset, y + offset, z,
+        faces.add(x + offset); faces.add(y - offset); faces.add(z);
+        faces.add(x - offset); faces.add(y - offset); faces.add(z);
+        faces.add(x - offset); faces.add(y + offset); faces.add(z);
+        faces.add(x + offset); faces.add(y + offset); faces.add(z);
+    }
+    if (posX - 1 < 0 || Cubes[posX - 1][posY][posZ] == null){
         // LEFT QUAD
-        x - offset, y + offset, z - CUBE_LENGTH,
-        x - offset, y + offset, z,
-        x - offset, y - offset, z,
-        x - offset, y - offset, z - CUBE_LENGTH,
+        faces.add(x - offset); faces.add(y + offset); faces.add(z - CUBE_LENGTH);
+        faces.add(x - offset); faces.add(y + offset); faces.add(z);
+        faces.add(x - offset); faces.add(y - offset); faces.add(z);
+        faces.add(x - offset); faces.add(y - offset); faces.add(z - CUBE_LENGTH);
+    }
+    if (posX + 1 >= CHUNK_SIZE || Cubes[posX + 1][posY][posZ] == null){
         // RIGHT QUAD
-        x + offset, y + offset, z,
-        x + offset, y + offset, z - CUBE_LENGTH,
-        x + offset, y - offset, z - CUBE_LENGTH,
-        x + offset, y - offset, z };
+        faces.add(x + offset); faces.add(y + offset); faces.add(z);
+        faces.add(x + offset); faces.add(y + offset); faces.add(z - CUBE_LENGTH);
+        faces.add(x + offset); faces.add(y - offset); faces.add(z - CUBE_LENGTH);
+        faces.add(x + offset); faces.add(y - offset); faces.add(z);
+    }
+    
+    
+    
+    
+    
+    float[] facesArray = new float[faces.size()];
+    
+    for (int i = 0; i < faces.size(); i++){
+        facesArray[i] = faces.get(i);
+    }
+    
+    return facesArray;
+
+    
+    
+//    return new float[] {
+//        // TOP QUAD
+//        x + offset, y + offset, z,
+//        x - offset, y + offset, z,
+//        x - offset, y + offset, z - CUBE_LENGTH,
+//        x + offset, y + offset, z - CUBE_LENGTH,
+//        // BOTTOM QUAD
+//        x + offset, y - offset, z - CUBE_LENGTH,
+//        x - offset, y - offset, z - CUBE_LENGTH,
+//        x - offset, y - offset, z,
+//        x + offset, y - offset, z,
+//        // FRONT QUAD
+//        x + offset, y + offset, z - CUBE_LENGTH,
+//        x - offset, y + offset, z - CUBE_LENGTH,
+//        x - offset, y - offset, z - CUBE_LENGTH,
+//        x + offset, y - offset, z - CUBE_LENGTH,
+//        // BACK QUAD
+//        x + offset, y - offset, z,
+//        x - offset, y - offset, z,
+//        x - offset, y + offset, z,
+//        x + offset, y + offset, z,
+//        // LEFT QUAD
+//        x - offset, y + offset, z - CUBE_LENGTH,
+//        x - offset, y + offset, z,
+//        x - offset, y - offset, z,
+//        x - offset, y - offset, z - CUBE_LENGTH,
+//        // RIGHT QUAD
+//        x + offset, y + offset, z,
+//        x + offset, y + offset, z - CUBE_LENGTH,
+//        x + offset, y - offset, z - CUBE_LENGTH,
+//        x + offset, y - offset, z };
     }
     
     // method: createTexCube
     // purpose: returns a float array representing all textured faces of a new cube at the given position
-    public static float[] createTexCube(float x, float y, Cube cube) {
+    public float[] createTexCube(float x, float y, Cube cube, int posX, int posY, int posZ) {
         float offset = (1024f/16)/1024f;
         
         float[] topFace, bottomFace, frontFace, backFace, leftFace, rightFace;
@@ -264,6 +334,38 @@ public class Chunk {
                 leftFace = getTextureFace(x,y,offset,3,0,false);
                 rightFace = getTextureFace(x,y,offset,3,0,false);
         }
+        
+    //System.out.println("x: " + posX + ", y: " + posY + ", z: " + posZ);
+    
+    posX = posX / CUBE_LENGTH;
+    posY = posY / CUBE_LENGTH;
+    posZ = posZ / CUBE_LENGTH;
+        
+    if (!(posY + 1 >= CHUNK_SIZE) && Cubes[posX][posY + 1][posZ] != null){
+        // TOP QUAD
+        topFace = new float[0];
+    }
+    if (!(posY - 1 < 0) && Cubes[posX][posY - 1][posZ] != null){
+        // BOTTOM QUAD
+        bottomFace = new float[0];
+    }
+    if (!(posZ - 1 < 0) && Cubes[posX][posY][posZ - 1] != null){
+        // FRONT QUAD
+        frontFace = new float[0];
+    }
+    if (!(posZ + 1 >= CHUNK_SIZE) && Cubes[posX][posY][posZ + 1] != null){
+        // BACK QUAD
+        backFace = new float[0];
+    }
+    if (!(posX - 1 < 0) && Cubes[posX - 1][posY][posZ] != null){
+        // LEFT QUAD
+        leftFace = new float[0];
+    }
+    if (!(posX + 1 >= CHUNK_SIZE) && Cubes[posX + 1][posY][posZ] != null){
+        // RIGHT QUAD
+        rightFace = new float[0];
+    }
+        
         return mergeFaceArrays(topFace, bottomFace, frontFace, backFace, leftFace, rightFace);
         
     }
@@ -295,39 +397,68 @@ public class Chunk {
     
     // method: mergeFaceArrays
     // purpose: merges the given arrays of textured faces into one array representing an entire textured cube
-    private static float[] mergeFaceArrays(float[] topFace, float[] bottomFace, float[] frontFace, float[] backFace, float[] leftFace, float[] rightFace){
-        return new float[] {
-            // TOP TEXTURE
-            topFace[0], topFace[1],
-            topFace[2], topFace[3],
-            topFace[4], topFace[5],
-            topFace[6], topFace[7],
-            // BOTTOM TEXTURE
-            bottomFace[0], bottomFace[1],
-            bottomFace[2], bottomFace[3],
-            bottomFace[4], bottomFace[5],
-            bottomFace[6], bottomFace[7],
-            // FRONT TEXTURE
-            frontFace[0], frontFace[1],
-            frontFace[2], frontFace[3],
-            frontFace[4], frontFace[5],
-            frontFace[6], frontFace[7],
-            // BACK TEXTURE
-            backFace[0], backFace[1],
-            backFace[2], backFace[3],
-            backFace[4], backFace[5],
-            backFace[6], backFace[7],
-            // LEFT TEXTURE
-            leftFace[0], leftFace[1],
-            leftFace[2], leftFace[3],
-            leftFace[4], leftFace[5],
-            leftFace[6], leftFace[7],
-            // RIGHT TEXTURE
-            rightFace[0], rightFace[1],
-            rightFace[2], rightFace[3],
-            rightFace[4], rightFace[5],
-            rightFace[6], rightFace[7],
-        };
+    private static float[] mergeFaceArrays(float[] topFace, float[] bottomFace, float[] frontFace, float[] backFace, float[] leftFace, float[] rightFace){        
+        ArrayList<Float> mergedFaces = new ArrayList<>();
+        
+        for (float f : topFace){
+            mergedFaces.add(f);
+        }
+        for (float f : bottomFace){
+            mergedFaces.add(f);
+        }
+        for (float f : frontFace){
+            mergedFaces.add(f);
+        }
+        for (float f : backFace){
+            mergedFaces.add(f);
+        }
+        for (float f : leftFace){
+            mergedFaces.add(f);
+        }
+        for (float f : rightFace){
+            mergedFaces.add(f);
+        }
+        
+        float[] mergedFacesArray = new float[mergedFaces.size()];
+        
+        for (int i = 0; i < mergedFaces.size(); i++){
+            mergedFacesArray[i] = mergedFaces.get(i);
+        }
+        
+        return mergedFacesArray;
+        
+//        return new float[] {
+//            // TOP TEXTURE
+//            topFace[0], topFace[1],
+//            topFace[2], topFace[3],
+//            topFace[4], topFace[5],
+//            topFace[6], topFace[7],
+//            // BOTTOM TEXTURE
+//            bottomFace[0], bottomFace[1],
+//            bottomFace[2], bottomFace[3],
+//            bottomFace[4], bottomFace[5],
+//            bottomFace[6], bottomFace[7],
+//            // FRONT TEXTURE
+//            frontFace[0], frontFace[1],
+//            frontFace[2], frontFace[3],
+//            frontFace[4], frontFace[5],
+//            frontFace[6], frontFace[7],
+//            // BACK TEXTURE
+//            backFace[0], backFace[1],
+//            backFace[2], backFace[3],
+//            backFace[4], backFace[5],
+//            backFace[6], backFace[7],
+//            // LEFT TEXTURE
+//            leftFace[0], leftFace[1],
+//            leftFace[2], leftFace[3],
+//            leftFace[4], leftFace[5],
+//            leftFace[6], leftFace[7],
+//            // RIGHT TEXTURE
+//            rightFace[0], rightFace[1],
+//            rightFace[2], rightFace[3],
+//            rightFace[4], rightFace[5],
+//            rightFace[6], rightFace[7],
+//        };
     }
     
     // method: getCubeColor
