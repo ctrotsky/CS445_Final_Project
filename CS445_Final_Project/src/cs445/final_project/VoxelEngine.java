@@ -190,11 +190,11 @@ public class VoxelEngine {
         }
         if (Keyboard.isKeyDown(Keyboard.KEY_R))
         {
-            for (Chunk chunk : chunks){
+            for (int i = 0; i < chunks.size(); i++){
                 
                 int seed= 25*r.nextInt();
-                chunk = new Chunk(0,0,0, seed);
-                chunk.rebuildMesh(0,0,0);
+                chunks.remove(i);
+                chunks.add(new Chunk(0,0,0, seed));
             }
         }
         if (Keyboard.isKeyDown(Keyboard.KEY_Q))

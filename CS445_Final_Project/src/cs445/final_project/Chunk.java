@@ -59,13 +59,20 @@ public class Chunk {
     // method: rebuildMesh
     // purpose: adds data from all cubes within this chunk to buffers to be rendered.
     public void rebuildMesh(float startX, float startY, float startZ) {
+        r = new Random(seed);
+        glDeleteBuffers(VBOColorHandle);
+        glDeleteBuffers(VBOVertexHandle);
+        glDeleteBuffers(VBOTextureHandle);
+        glDeleteBuffers(GL_ARRAY_BUFFER);
+        glDeleteBuffers(GL_STATIC_DRAW);
+        
         VBOColorHandle = glGenBuffers();
         VBOVertexHandle = glGenBuffers();
         VBOTextureHandle = glGenBuffers();
+        
         int height=0;
         int pheight[][]= new int[CHUNK_SIZE][CHUNK_SIZE];
         SimplexNoise noise;
-        Random r= new Random();
         
         if (WATER_LEVEL > CHUNK_SIZE){
             WATER_LEVEL = CHUNK_SIZE;
@@ -95,6 +102,7 @@ public class Chunk {
         FloatBuffer VertexPositionData = BufferUtils.createFloatBuffer((CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE) * 6 * 12);
         FloatBuffer VertexColorData = BufferUtils.createFloatBuffer((CHUNK_SIZE* CHUNK_SIZE * CHUNK_SIZE) * 6 * 12);
         FloatBuffer VertexTextureData = BufferUtils.createFloatBuffer((CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE)* 6 * 12);
+        
         for (int x = 0; x < CHUNK_SIZE; x += 1) {
             for (int z = 0; z < CHUNK_SIZE; z += 1) {
                 int i= (int)(StartX+x*((300-startX)/640));
@@ -130,6 +138,13 @@ public class Chunk {
         glBindBuffer(GL_ARRAY_BUFFER, VBOTextureHandle);
         glBufferData(GL_ARRAY_BUFFER, VertexTextureData, GL_STATIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
+        
+        VertexColorData.clear();
+        VertexPositionData.clear();
+        VertexTextureData.clear();
+        VertexColorData = null;
+        VertexPositionData = null;
+        VertexTextureData = null;
     }
     
     // method: createCubeVertexCol
@@ -332,7 +347,7 @@ public class Chunk {
         {
             System.out.print("ER-ROAR!");
         }
-        r = new Random();
+        r = new Random(seed);
         Cubes = new Cube[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
         VBOColorHandle = glGenBuffers();
         VBOVertexHandle = glGenBuffers();
